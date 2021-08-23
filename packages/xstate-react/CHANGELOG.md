@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.6.0
+
+### Minor Changes
+
+- [`4b4872ca`](https://github.com/statelyai/xstate/commit/4b4872cafd63f825f3918c6eb6fa84642d45e3e0) [#2241](https://github.com/statelyai/xstate/pull/2241) Thanks [@mattpocock](https://github.com/mattpocock)! - Changed the behaviour of guards, delays and activities when declared as options in `useMachine`/`useInterpret`.
+
+  Previously, guards could not reference external props, because they would not be updated when the props changed. For instance:
+
+  ```tsx
+  const Modal = props => {
+    useMachine(modalMachine, {
+      guards: {
+        isModalOpen: () => props.isOpen
+      }
+    });
+  };
+  ```
+
+  When the component is created, `props.isOpen` would be checked and evaluated to the initial value. But if the guard is evaluated at any other time, it will not respond to the props' changed value.
+
+  This is not true of actions/services. This will work as expected:
+
+  ```tsx
+  const Modal = props => {
+    useMachine(modalMachine, {
+      actions: {
+        consoleLogModalOpen: () => {
+          console.log(props.isOpen);
+        }
+      }
+    });
+  };
+  ```
+
+  This change brings guards and delays into line with actions and services.
+
+  ⚠️ **NOTE:** Whenever possible, use data from within `context` rather than external data in your guards and delays.
+
 ## 1.5.1
 
 ### Patch Changes
@@ -129,7 +167,7 @@
   import { useSelector } from '@xstate/react';
 
   const App = ({ someActor }) => {
-    const count = useSelector(someActor, (state) => state.context.count);
+    const count = useSelector(someActor, state => state.context.count);
 
     // ...
   };
@@ -250,7 +288,7 @@ All notable changes to this project will be documented in this file.
 - The `useActor` hook now takes a second argument: `getSnapshot` which is a function that should return the last emitted value:
 
   ```js
-  const [state, send] = useActor(someActor, (actor) => actor.current);
+  const [state, send] = useActor(someActor, actor => actor.current);
   ```
 
 ## [1.0.0-rc.6]
